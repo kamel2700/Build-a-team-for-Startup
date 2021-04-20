@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Project Page</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <!--     Fonts and icons     -->
+    <link rel="stylesheet" type="text/css"
+          href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
+    <!-- Material Kit CSS -->
+    <link href="/static/material-kit-master/assets/css/material-kit.css?v=2.0.5" rel="stylesheet"/>
+
+    <style>
+        body {
+            background-image: url('/static/material-kit-master/assets/img/bg.jpg');
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: top center;
+            background-color: rgba(58, 58, 58, 0.5)
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar fixed-top navbar-expand-lg" color-on-scroll="100">
+    <div class="container">
+        <div class="navbar-translate">
+            <a class="navbar-brand" href="{% url 'accounts:home' %}"> Build a team for startup </a>
+
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="navbar-toggler-icon"></span>
+                <span class="navbar-toggler-icon"></span>
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'accounts:profiles_catalog' %}">Worker Catalog</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'accounts:projects_catalog' %}">Project Catalog</a>
+                </li>
+                {% if user.is_authenticated %}
+                    <li class="nav-item logged-in">
+                        <a class="nav-link" href="{% url 'accounts:profile' %}">My profile</a>
+                    </li>
+                    <li class="nav-item logged-in">
+                        <a class="nav-link" href="{% url 'accounts:logout' %}">Log Out</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item logged-out">
+                        <a class="nav-link" href="{% url 'accounts:registration' %}">Sign Up</a>
+                    </li>
+                    <li class="nav-item logged-out">
+                        <a class="nav-link" href="{% url 'accounts:login' %}">Sign In</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+
+    </div>
+</nav>
+
+
+<div class="main main-raised" style="margin-top: 8%">
+    <div style="padding-top: 2%">
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <div class="row">
+                        <div class="col-5">
+                            <img class="img-raised rounded-circle img-fluid"
+                                    {% if project.image %} src="{{ project.image.url }}" {% else %}
+                                 src="/media/default_project.jpg" {% endif %} alt="My Photo">
+                        </div>
+                        <div class="col">
+
+                            <h1>{{ project.title }}</h1>
+                            <p><span class="badge badge-secondary">Rating 5/5, 46 votes</span></p>
+                            <p>Type: {{ project.type }}</p>
+                            <div>
+                                Owner: <a href="{% url 'accounts:profile_with_id' id=project.owner.id %}"
+                                          class="stretched-link font-weight-bold">{{ project.owner }}</a>
+                            </div>
+
+                            <h2 class="content-subhead">Description</h2>
+                            <p>
+                                {{ project.description }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-primary" data-toggle="modal"
+                            data-target="#participantModal">Participant
+                    </button>
+                    {% if current_user == project.owner %}
+                        <a class="btn btn-primary" href="{% url 'accounts:project_edit' id=project.id %}">Edit
+                            Project</a>
+                        <button type="button" class="btn btn-primary" data-toggle="modal"
+                                data-target="#waitingListModal">Waiting
+                            List
+                        </button>
+                    {% else %}
+                        <a class="btn btn-primary" href="#">Subscribe</a>
+                        {% if current_user in project.waiting_list.all %}
+                            <a class="btn btn-primary"
+                               href="{% url 'accounts:removefromparticipate' id=project.id %}">Exit from project</a>
+                        {% elif current_user not in project.participants.all %}
+                            <a class="btn btn-primary"
+                               href="{% url 'accounts:project_applying' id=project.id %}">Apply</a>
+                        {% endif %}
+
+                    {% endif %}
+                </div>
+
+            </div>
+            <hr>
+            <div class="row">
+                <h2>Comments</h2>
+            </div>
+            <div class="row">
+                {% for comment in comments %}
+                    <div class="col-sm-4">
+                        <div class="card">
+                            <div class="row no-gutters">
+
+                                <div class="card-body">
+                                    <div class="description">
+                                        <h6><a href="{% url 'accounts:profile_with_id' id=comment.author.id %}"
+                                               class="stretched-link font-weight-bold">{{ comment.author.first_name }} {{ comment.author.last_name }}</a>
+                                        </h6>
+                                        <p style="color: black">{{ comment.text }}</p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="row" style="padding-bottom: 2%">
+                {% if current_user != project.owner and current_user.is_authenticated %}
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#commentModal">Write
+                        comment
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Comment -->
+{% if current_user != project.owner %}
+    <div class="modal fade" id="commentModal" tabindex="-1" role="dialog" aria-labelledby="commentModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form class="form" method="post">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Write your comment</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        {% for field in commentForm %}
+                            <div class="form-group bmd-form-group">
+                                <label class="bmd-label-floating">Comment</label>
+                                {{ field }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Comment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Modal Waiting List-->
+{% if current_user == project.owner %}
+    <div class="modal fade" id="waitingListModal" tabindex="-1" role="dialog" aria-labelledby="waitingListModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form class="form-group" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title">Waiting List</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        {% if project.waiting_list.all %}
+                            <label class="bmd-label-static">Multiple select list</label>
+                            <br>
+                        {% else %}
+                            <label class="bmd-label-static">No one =(</label>
+                        {% endif %}
+                        <label for="waitingList">
+                            <select multiple class="form-control" name="waitingList" id="waitingList">
+                                {% for user in project.waiting_list.all %}
+                                    <option value="{{ user.id }}">{{ user.first_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Modal Participant List-->
+<div class="modal fade" id="participantModal" tabindex="-1" role="dialog" aria-labelledby="participantModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form class="form-group" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Participant List</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    {% if project.participants.all %}
+                        <label class="bmd-label-static">Multiple select list</label>
+                        <br>
+                    {% else %}
+                        <label class="bmd-label-static">No one =(</label>
+                    {% endif %}
+                    <label for="participantList">
+                        <select multiple class="form-control" name="participantList" id="participantList">
+                            {% for user in project.participants.all %}
+                                <option value="{{ user.id }}">{{ user.first_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    {% if current_user == project.owner %}
+                        <button type="submit" class="btn btn-primary">Delete From
+                            Project
+                        </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<footer class="footer footer-default">
+    <div class="container">
+        <nav>
+            <ul>
+                <li>
+                    <a href="https://github.com/stalem9/Build-a-team-for-Startup">see our project on Github</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</footer>
+<!--   Core JS Files   -->
+<script src="/static/material-kit-master/assets/js/core/jquery.min.js" type="text/javascript"></script>
+<script src="/static/material-kit-master/assets/js/core/popper.min.js" type="text/javascript"></script>
+<script src="/static/material-kit-master/assets/js/core/bootstrap-material-design.min.js"
+        type="text/javascript"></script>
+<script src="/static/material-kit-master/assets/js/plugins/moment.min.js"></script>
+<!--	Plugin for the Datepicker, full documentation here: https://github.com/Eonasdan/bootstrap-datetimepicker -->
+<script src="/static/material-kit-master/assets/js/plugins/bootstrap-datetimepicker.js" type="text/javascript"></script>
+<!--  Plugin for the Sliders, full documentation here: http://refreshless.com/nouislider/ -->
+<script src="/static/material-kit-master/assets/js/plugins/nouislider.min.js" type="text/javascript"></script>
+<!-- Place this tag in your head or just before your close body tag. -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+<!-- Control Center for Material Kit: parallax effects, scripts for the example pages etc -->
+<script src="/static/material-kit-master/assets/js/material-kit.js?v=2.0.5" type="text/javascript"></script>
+</body>
+</html>
